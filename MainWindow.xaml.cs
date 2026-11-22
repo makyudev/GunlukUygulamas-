@@ -2,8 +2,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -72,6 +74,7 @@ public partial class MainWindow : Window
     private readonly MoodOption[] _moods;
     private readonly DispatcherTimer _autoSaveTimer;
     private readonly DispatcherTimer _savedNotificationTimer;
+    private readonly UpdateService _updateService = new();
     private AppSettings _settings = new();
     private DiaryEntry? _selectedEntry;
     private ICollectionView? _entriesView;
@@ -89,6 +92,9 @@ public partial class MainWindow : Window
     private bool _isSidebarCollapsed;
     private bool _isSidebarAnimating;
     private bool _isCompletingAuthentication;
+    private bool _isCheckingForUpdates;
+    private bool _hasShownAutomaticUpdate;
+    private bool _hasStartedAutomaticUpdateCheck;
     private int _authenticationAttemptVersion;
     private int _authenticationScreenGeneration;
     private DrawingTool _drawingTool;
@@ -537,6 +543,8 @@ public partial class MainWindow : Window
             MainWorkspaceGrid.Visibility = Visibility.Visible;
             LoadApplicationData();
             _autoSaveTimer.Start();
+            _ = Dispatcher.BeginInvoke(
+                new Action(() => _ = CheckForUpdatesAutomaticallyAsync()), DispatcherPriority.Background);
         }
         catch (Exception exception)
         {
@@ -700,7 +708,126 @@ public partial class MainWindow : Window
         DisablePasswordCheckBox.IsChecked = false;
         SettingsNewPasswordBox.Clear();
         SettingsConfirmPasswordBox.Clear();
+        CurrentVersionTextBlock.Text = $"Mevcut sürüm: v{UpdateService.CurrentVersion.ToString(3)}";
         ShowModal("settings");
+    }
+
+    private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryBeginUpdateCheck())
+        {
+            return;
+        }
+
+        try
+        {
+            var release = await _updateService.GetLatestReleaseAsync();
+            if (release is null)
+            {
+                MessageBox.Show(this, "GitHub'da henüz yayımlanmış bir sürüm bulunmuyor.",
+                    "Güncelleme denetimi", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else if (release.Version > UpdateService.CurrentVersion)
+            {
+                ShowUpdateWindow(release, showInstallButton: true);
+            }
+            else
+            {
+                MessageBox.Show(this, $"Uygulama güncel. Son yayınlanan sürüm: {release.TagName}",
+                    "Güncelleme denetimi", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or TaskCanceledException or JsonException or InvalidDataException)
+        {
+            ShowError("Güncellemeler denetlenemedi.", exception);
+        }
+        finally
+        {
+            EndUpdateCheck();
+        }
+    }
+
+    private async void ViewReleaseNotesButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryBeginUpdateCheck())
+        {
+            return;
+        }
+
+        try
+        {
+            var release = await _updateService.GetLatestReleaseAsync();
+            if (release is null)
+            {
+                MessageBox.Show(this, "GitHub'da görüntülenecek yayımlanmış bir sürüm bulunmuyor.",
+                    "Güncelleme notları", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            ShowUpdateWindow(release, showInstallButton: false);
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or TaskCanceledException or JsonException or InvalidDataException)
+        {
+            ShowError("Güncelleme notları alınamadı.", exception);
+        }
+        finally
+        {
+            EndUpdateCheck();
+        }
+    }
+
+    private async Task CheckForUpdatesAutomaticallyAsync()
+    {
+        if (_hasStartedAutomaticUpdateCheck || !TryBeginUpdateCheck())
+        {
+            return;
+        }
+
+        _hasStartedAutomaticUpdateCheck = true;
+        try
+        {
+            var release = await _updateService.GetAvailableUpdateAsync();
+            if (release is not null && IsLoaded && !_hasShownAutomaticUpdate)
+            {
+                _hasShownAutomaticUpdate = true;
+                ShowUpdateWindow(release, showInstallButton: true);
+            }
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or TaskCanceledException or JsonException or InvalidDataException)
+        {
+        }
+        finally
+        {
+            EndUpdateCheck();
+        }
+    }
+
+    private bool TryBeginUpdateCheck()
+    {
+        if (_isCheckingForUpdates)
+        {
+            return false;
+        }
+
+        _isCheckingForUpdates = true;
+        CheckForUpdatesButton.IsEnabled = false;
+        ViewReleaseNotesButton.IsEnabled = false;
+        return true;
+    }
+
+    private void EndUpdateCheck()
+    {
+        _isCheckingForUpdates = false;
+        CheckForUpdatesButton.IsEnabled = true;
+        ViewReleaseNotesButton.IsEnabled = true;
+    }
+
+    private void ShowUpdateWindow(UpdateRelease release, bool showInstallButton)
+    {
+        new UpdateWindow(release, showInstallButton) { Owner = this }.ShowDialog();
     }
 
     private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
