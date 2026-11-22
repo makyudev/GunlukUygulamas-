@@ -9,7 +9,7 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
     <AssemblyName>GunlukUygulamasi</AssemblyName>
     <RootNamespace>GunlukUygulamasi</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>GunlukUygulamasi</Authors>
     <Product>Günlük Uygulaması</Product>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
