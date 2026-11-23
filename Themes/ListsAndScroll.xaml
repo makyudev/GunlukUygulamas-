@@ -13,7 +13,7 @@
                                 <Thumb>
                                     <Thumb.Style>
                                         <Style TargetType="{x:Type Thumb}">
-                                            <Setter Property="Background" Value="#343D54" />
+                                            <Setter Property="Background" Value="{DynamicResource BgElevatedBrush}" />
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="{x:Type Thumb}">
@@ -21,10 +21,10 @@
                                                                 CornerRadius="4" Margin="1,0" />
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="ThumbBorder" Property="Background" Value="#4B5675" />
+                                                                <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource BgHoverBrush}" />
                                                             </Trigger>
                                                             <Trigger Property="IsDragging" Value="True">
-                                                                <Setter TargetName="ThumbBorder" Property="Background" Value="{StaticResource AccentBrush}" />
+                                                                <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource AccentBrush}" />
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -58,19 +58,19 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="CardBorder" Background="{StaticResource BgSurfaceBrush}"
-                            BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1"
+                    <Border x:Name="CardBorder" Background="{DynamicResource BgSurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
                             CornerRadius="11" Padding="14,12">
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="CardBorder" Property="Background" Value="{StaticResource BgHoverBrush}" />
-                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="#394461" />
+                            <Setter TargetName="CardBorder" Property="Background" Value="{DynamicResource BgHoverBrush}" />
+                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="CardBorder" Property="Background" Value="#202840" />
-                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="CardBorder" Property="Background" Value="{DynamicResource BgElevatedBrush}" />
+                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

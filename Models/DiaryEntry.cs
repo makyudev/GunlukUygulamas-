@@ -17,6 +17,7 @@ public class DiaryEntry : INotifyPropertyChanged
     private DateTime _createdAt = DateTime.Now;
     private DateTime _updatedAt = DateTime.Now;
     private string _mood = "Mutlu";
+    private string _weatherBadge = string.Empty;
     private List<string> _tags = [];
     private List<string> _photoPaths = [];
     private List<DiaryPhoto> _photoItems = [];
@@ -92,6 +93,12 @@ public class DiaryEntry : INotifyPropertyChanged
     {
         get => _mood;
         set => SetField(ref _mood, value);
+    }
+
+    public string WeatherBadge
+    {
+        get => _weatherBadge;
+        set => SetField(ref _weatherBadge, value ?? string.Empty);
     }
 
     public List<string> Tags

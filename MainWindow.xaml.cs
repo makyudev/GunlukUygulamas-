@@ -23,6 +23,15 @@ using GunlukUygulamasi.Models;
 using GunlukUygulamasi.Services;
 using Microsoft.Win32;
 using Path = System.IO.Path;
+using Brush = System.Windows.Media.Brush;
+using Button = System.Windows.Controls.Button;
+using Control = System.Windows.Controls.Control;
+using DragEventArgs = System.Windows.DragEventArgs;
+using Image = System.Windows.Controls.Image;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Point = System.Windows.Point;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace GunlukUygulamasi;
 
@@ -65,7 +74,11 @@ public partial class MainWindow : Window
 
     private readonly DiaryStorageService _storage = new();
     private readonly DiarySecurityService _security;
+    private readonly WeatherService _weatherService = new();
+    private readonly ThemeService _themeService;
+    private readonly ReminderService _reminderService;
     private readonly ObservableCollection<DiaryEntry> _entries = [];
+    private readonly HashSet<Guid> _weatherRequests = [];
     private readonly Dictionary<DiaryPhoto, PhotoVisual> _photoVisuals = [];
     private readonly Dictionary<DiaryPhoto, double> _photoAspectRatios = [];
     private readonly Stack<StrokeHistoryAction> _strokeUndoStack = [];
@@ -74,8 +87,11 @@ public partial class MainWindow : Window
     private readonly MoodOption[] _moods;
     private readonly DispatcherTimer _autoSaveTimer;
     private readonly DispatcherTimer _savedNotificationTimer;
+    private readonly DispatcherTimer _themeTimer;
     private readonly UpdateService _updateService = new();
     private AppSettings _settings = new();
+    private WeatherSnapshot? _currentWeather;
+    private string _pendingThemeName = ThemeService.NightBlue;
     private DiaryEntry? _selectedEntry;
     private ICollectionView? _entriesView;
     private byte[]? _encryptionKey;
@@ -95,6 +111,8 @@ public partial class MainWindow : Window
     private bool _isCheckingForUpdates;
     private bool _hasShownAutomaticUpdate;
     private bool _hasStartedAutomaticUpdateCheck;
+    private bool _isRefreshingWeather;
+    private readonly bool _startMinimized;
     private int _authenticationAttemptVersion;
     private int _authenticationScreenGeneration;
     private DrawingTool _drawingTool;
@@ -128,6 +146,26 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        MiniAquarium.FishStateChanged += MiniAquarium_FishStateChanged;
+        _themeService = new ThemeService(Application.Current);
+        _startMinimized = Environment.GetCommandLineArgs()
+            .Any(argument => string.Equals(argument, "--minimized", StringComparison.OrdinalIgnoreCase));
+        _reminderService = new ReminderService(RestoreWindowFromTray, ExitFromTray,
+            date => _entries.Any(entry => entry.Date.Date == date.Date), _themeService);
+        _themeTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(30) };
+        _themeTimer.Tick += (_, _) =>
+        {
+            if (_currentWeather is not null)
+            {
+                WeatherOverviewIcon.Text = GetWeatherGlyph(_currentWeather.WeatherCode, DateTime.Now);
+            }
+
+            if (string.Equals(_settings.ThemeName, ThemeService.DynamicWeather, StringComparison.Ordinal))
+            {
+                ApplyThemeSafely(_settings.ThemeName);
+            }
+        };
+        Loaded += MainWindow_Loaded;
         BrushSizeSlider.ValueChanged += BrushSizeSlider_ValueChanged;
         _security = new DiarySecurityService(_storage.DataDirectory);
         _moods = CreateMoodOptions();
@@ -162,6 +200,7 @@ public partial class MainWindow : Window
         try
         {
             _settings = _storage.LoadSettings();
+            ApplyAquariumSettings();
             if (!_security.HasConfiguration)
             {
                 ShowAuthenticationScreen(isFirstRunSetup: true);
@@ -212,7 +251,9 @@ public partial class MainWindow : Window
         AuthenticationPasswordBox.Visibility = isFirstRunSetup || _security.PasswordEnabled
             ? Visibility.Visible
             : Visibility.Collapsed;
+        AuthenticationPasswordBorder.Visibility = AuthenticationPasswordBox.Visibility;
         AuthenticationPasswordVisibilityButton.Visibility = AuthenticationPasswordBox.Visibility;
+        UpdateAuthenticationPasswordPlaceholder();
         AuthenticationEyePath.Data = Geometry.Parse(
             "M12,5C7,5 2.73,8.11 1,12C2.73,15.89 7,19 12,19C17,19 21.27,15.89 23,12C21.27,8.11 17,5 12,5M12,16.5A4.5,4.5 0 1,1 12,7.5A4.5,4.5 0 0,1 12,16.5M12,14A2,2 0 1,0 12,10A2,2 0 0,0 12,14");
         AuthenticationConfirmationBox.Password = string.Empty;
@@ -295,11 +336,33 @@ public partial class MainWindow : Window
         UpdateCapsLockWarning();
     }
 
-    private void AuthenticationPasswordBox_PasswordChanged(object sender, RoutedEventArgs e) =>
+    private void AuthenticationPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        AuthenticationErrorText.Text = string.Empty;
+        UpdateAuthenticationPasswordPlaceholder();
         _ = CheckAuthenticationPasswordAsync();
+    }
 
-    private void AuthenticationVisiblePasswordTextBox_TextChanged(object sender, TextChangedEventArgs e) =>
+    private void AuthenticationVisiblePasswordTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        AuthenticationErrorText.Text = string.Empty;
+        UpdateAuthenticationPasswordPlaceholder();
         _ = CheckAuthenticationPasswordAsync();
+    }
+
+    private void UpdateAuthenticationPasswordPlaceholder()
+    {
+        var passwordIsEmpty = AuthenticationPasswordBox.Visibility == Visibility.Visible
+            ? AuthenticationPasswordBox.Password.Length == 0
+            : AuthenticationVisiblePasswordTextBox.Text.Length == 0;
+        AuthenticationPasswordPlaceholder.Visibility =
+            passwordIsEmpty && !AuthenticationPasswordBorder.IsKeyboardFocusWithin
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+    }
+
+    private void AuthenticationInput_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) =>
+        UpdateAuthenticationPasswordPlaceholder();
 
     private async Task CheckAuthenticationPasswordAsync()
     {
@@ -345,7 +408,7 @@ public partial class MainWindow : Window
                         AuthenticationOverlayGrid.Visibility == Visibility.Visible &&
                         password.Length >= 6)
                     {
-                        ShakeAuthenticationCard();
+                        ShowAuthenticationFailure();
                     }
                 }
 
@@ -385,6 +448,7 @@ public partial class MainWindow : Window
                 "M3,3L21,21 M10.58,10.59A2,2 0 0,0 13.41,13.42 M9.88,5.09A10.94,10.94 0 0,1 12,4.88C17,4.88 21.27,8 23,11.88A11.83,11.83 0 0,1 18.84,16.8 M6.61,6.61A11.78,11.78 0 0,0 1,11.88C2.73,15.76 7,18.88 12,18.88C13.27,18.88 14.48,18.65 15.58,18.24");
             Keyboard.Focus(AuthenticationVisiblePasswordTextBox);
             AuthenticationVisiblePasswordTextBox.CaretIndex = AuthenticationVisiblePasswordTextBox.Text.Length;
+            UpdateAuthenticationPasswordPlaceholder();
         }
         else
         {
@@ -394,6 +458,7 @@ public partial class MainWindow : Window
             AuthenticationEyePath.Data = Geometry.Parse(
                 "M12,5C7,5 2.73,8.11 1,12C2.73,15.89 7,19 12,19C17,19 21.27,15.89 23,12C21.27,8.11 17,5 12,5M12,16.5A4.5,4.5 0 1,1 12,7.5A4.5,4.5 0 0,1 12,16.5M12,14A2,2 0 1,0 12,10A2,2 0 0,0 12,14");
             Keyboard.Focus(AuthenticationPasswordBox);
+            UpdateAuthenticationPasswordPlaceholder();
         }
     }
 
@@ -401,8 +466,11 @@ public partial class MainWindow : Window
 
     private void AuthenticationInput_PreviewKeyUp(object sender, KeyEventArgs e) => UpdateCapsLockWarning();
 
-    private void AuthenticationInput_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) =>
+    private void AuthenticationInput_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
         UpdateCapsLockWarning();
+        UpdateAuthenticationPasswordPlaceholder();
+    }
 
     private void UpdateCapsLockWarning()
     {
@@ -422,11 +490,40 @@ public partial class MainWindow : Window
         AuthenticationCardTranslateTransform.BeginAnimation(TranslateTransform.XProperty, shake);
     }
 
+    private void ShowAuthenticationFailure()
+    {
+        AuthenticationErrorText.Text = "Parola veya PIN yanlış.";
+        ShakeAuthenticationCard();
+
+        var borderBrush = new SolidColorBrush(Color.FromRgb(239, 68, 68));
+        AuthenticationPasswordBorder.BorderBrush = borderBrush;
+        var pulse = new ColorAnimation
+        {
+            From = Color.FromRgb(239, 68, 68),
+            To = AuthenticationPasswordBorder.IsKeyboardFocusWithin
+                ? Color.FromRgb(129, 140, 248)
+                : Color.FromRgb(67, 70, 91),
+            Duration = TimeSpan.FromMilliseconds(180),
+            AutoReverse = true,
+            FillBehavior = FillBehavior.Stop
+        };
+        pulse.Completed += (_, _) =>
+        {
+            if (ReferenceEquals(AuthenticationPasswordBorder.BorderBrush, borderBrush))
+            {
+                AuthenticationPasswordBorder.ClearValue(Border.BorderBrushProperty);
+            }
+        };
+        borderBrush.BeginAnimation(SolidColorBrush.ColorProperty, pulse);
+    }
+
     private void AuthenticationActionButton_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var password = AuthenticationPasswordBox.Password;
+            var password = AuthenticationPasswordBox.Visibility == Visibility.Visible
+                ? AuthenticationPasswordBox.Password
+                : AuthenticationVisiblePasswordTextBox.Text;
             if (!_isFirstRunSetup && !_security.PasswordEnabled)
             {
                 CompleteAuthentication(_security.UnlockWithoutPassword());
@@ -459,6 +556,7 @@ public partial class MainWindow : Window
                 return;
             }
 
+            ShowAuthenticationFailure();
             return;
         }
         catch (Exception exception)
@@ -584,10 +682,17 @@ public partial class MainWindow : Window
             UpdateEditorState();
 
             _settings = _storage.LoadSettings();
+            ApplyAquariumSettings();
             _settings.DiaryName = string.IsNullOrWhiteSpace(_settings.DiaryName)
                 ? "Kişisel Günlüğüm"
                 : _settings.DiaryName.Trim();
             _settings.PasswordHint = _settings.PasswordHint?.Trim() ?? string.Empty;
+            _settings.ManualCity = _settings.ManualCity?.Trim() ?? string.Empty;
+            if (!TimeOnly.TryParseExact(_settings.ReminderTime, "HH:mm",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            {
+                _settings.ReminderTime = "21:00";
+            }
             if (!FontFamilies.Contains(_settings.EditorFontFamily, StringComparer.Ordinal))
             {
                 _settings.EditorFontFamily = "Segoe UI";
@@ -598,6 +703,11 @@ public partial class MainWindow : Window
                 _settings.EditorFontSize = 15;
             }
 
+            _settings.ThemeName = ThemeService.IsKnownTheme(_settings.ThemeName)
+                ? _settings.ThemeName
+                : ThemeService.NightBlue;
+            _pendingThemeName = _settings.ThemeName;
+            ApplyThemeSafely(_settings.ThemeName);
             SidebarDiaryTitleText.Text = _settings.DiaryName;
             Title = _settings.DiaryName;
             EntryContentTextBox.FontSize = _settings.EditorFontSize;
@@ -610,6 +720,7 @@ public partial class MainWindow : Window
                 entry.PhotoPaths ??= [];
                 entry.PhotoItems ??= [];
                 entry.ContentStrokes ??= [];
+                entry.WeatherBadge ??= string.Empty;
                 foreach (var stroke in entry.ContentStrokes)
                 {
                     NormalizeStroke(stroke);
@@ -644,6 +755,17 @@ public partial class MainWindow : Window
 
             ApplySortOrder();
             UpdateEntryListState();
+            try
+            {
+                _reminderService.SetStartWithWindows(_settings.StartWithWindows);
+            }
+            catch (Exception exception)
+            {
+                ShowError("Windows başlangıç ayarı uygulanamadı.", exception);
+            }
+
+            _reminderService.UpdateSettings(_settings);
+            _themeTimer.Start();
         }
         catch (Exception exception)
         {
@@ -665,6 +787,175 @@ public partial class MainWindow : Window
         NewEntryContentTextBox.Text = string.Empty;
         ShowModal("new-entry");
         NewEntryTitleTextBox.Focus();
+    }
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_startMinimized)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        await RefreshWeatherAsync();
+    }
+
+    private void Window_StateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            ShowInTaskbar = false;
+            Hide();
+        }
+    }
+
+    private void RestoreWindowFromTray()
+    {
+        ShowInTaskbar = true;
+        Show();
+        WindowState = WindowState.Normal;
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
+    }
+
+    private void ExitFromTray()
+    {
+        Close();
+    }
+
+    private void RequestWeatherBadge(DiaryEntry entry)
+    {
+        if (!_settings.AutoWeatherBadge ||
+            !string.IsNullOrWhiteSpace(entry.WeatherBadge) ||
+            !_weatherRequests.Add(entry.Id))
+        {
+            return;
+        }
+
+        _ = FetchWeatherBadgeAsync(entry);
+    }
+
+    private async Task FetchWeatherBadgeAsync(DiaryEntry entry)
+    {
+        try
+        {
+            var requestedCity = _settings.ManualCity;
+            var weather = await _weatherService.GetWeatherAsync(requestedCity);
+            if (weather is null ||
+                !_settings.AutoWeatherBadge ||
+                !string.Equals(requestedCity, _settings.ManualCity, StringComparison.Ordinal) ||
+                _encryptionKey is null ||
+                !_entries.Contains(entry))
+            {
+                return;
+            }
+
+            entry.WeatherBadge = weather.Badge;
+            if (!SaveEntries())
+            {
+                entry.WeatherBadge = string.Empty;
+            }
+
+            if (ReferenceEquals(_selectedEntry, entry))
+            {
+                UpdateWeatherBadge();
+            }
+        }
+        finally
+        {
+            _weatherRequests.Remove(entry.Id);
+        }
+    }
+
+    private async Task RefreshWeatherAsync()
+    {
+        if (_isRefreshingWeather)
+        {
+            return;
+        }
+
+        _isRefreshingWeather = true;
+        WeatherOverviewText.Text = "Hava durumu yükleniyor...";
+        WeatherOverviewIcon.Text = "☁";
+        try
+        {
+            WeatherSnapshot? weather;
+            string? requestedCity;
+            do
+            {
+                requestedCity = _settings.ManualCity;
+                weather = await _weatherService.GetWeatherAsync(requestedCity);
+            }
+            while (!string.Equals(requestedCity, _settings.ManualCity, StringComparison.Ordinal));
+
+            _currentWeather = weather;
+            if (_currentWeather is null)
+            {
+                WeatherOverviewText.Text = "Hava durumu alınamadı · Yenile";
+                WeatherOverviewIcon.Text = "☁";
+            }
+            else
+            {
+                WeatherOverviewText.Text =
+                    $"{_currentWeather.TemperatureLabel} · {_currentWeather.City}";
+                WeatherOverviewIcon.Text = GetWeatherGlyph(_currentWeather.WeatherCode, DateTime.Now);
+            }
+
+            if (string.Equals(_settings.ThemeName, ThemeService.DynamicWeather, StringComparison.Ordinal))
+            {
+                ApplyThemeSafely(_settings.ThemeName);
+            }
+        }
+        finally
+        {
+            _isRefreshingWeather = false;
+        }
+    }
+
+    private async void WeatherOverviewCapsule_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) =>
+        await RefreshWeatherAsync();
+
+    private void ApplyThemeSafely(string? themeName)
+    {
+        try
+        {
+            _themeService.ApplyTheme(themeName, _currentWeather, DateTime.Now);
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Trace.TraceError("Tema uygulanamadı: {0}", exception);
+        }
+    }
+
+    private static string GetWeatherGlyph(int weatherCode, DateTime localTime)
+    {
+        if (localTime.Hour >= 20 || localTime.Hour < 6)
+        {
+            return "☾";
+        }
+
+        if (weatherCode is 71 or 73 or 75 or 77 or 85 or 86)
+        {
+            return "❄";
+        }
+
+        if (weatherCode is 51 or 53 or 55 or 56 or 57 or 61 or 63 or 65 or 66 or 67 or
+            80 or 81 or 82 or 95 or 96 or 99)
+        {
+            return "☂";
+        }
+
+        return weatherCode is 0 or 1 ? "☀" : "☁";
+    }
+
+    private void UpdateWeatherBadge()
+    {
+        var badge = _selectedEntry?.WeatherBadge;
+        WeatherBadgeText.Text = badge ?? string.Empty;
+        WeatherBadgeBorder.Visibility = _settings.AutoWeatherBadge && !string.IsNullOrWhiteSpace(badge)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void SaveNewEntryButton_Click(object sender, RoutedEventArgs e)
@@ -691,6 +982,7 @@ public partial class MainWindow : Window
             return;
         }
 
+        RequestWeatherBadge(entry);
         CloseModal();
         UpdateEntryListState();
     }
@@ -705,11 +997,146 @@ public partial class MainWindow : Window
         SettingsFontFamilyComboBox.SelectedItem = _settings.EditorFontFamily;
         SettingsSortNewestFirstCheckBox.IsChecked = _settings.SortNewestFirst;
         SettingsConfirmDeleteCheckBox.IsChecked = _settings.ConfirmDelete;
+        SettingsShowAquariumCheckBox.IsChecked = _settings.ShowMiniAquarium;
+        SettingsAutoWeatherBadgeCheckBox.IsChecked = _settings.AutoWeatherBadge;
+        SettingsManualCityTextBox.Text = _settings.ManualCity ?? string.Empty;
+        SettingsStartWithWindowsCheckBox.IsChecked = _settings.StartWithWindows;
+        SettingsDailyReminderCheckBox.IsChecked = _settings.DailyReminderEnabled;
+        SettingsReminderTimeTextBox.Text = _settings.ReminderTime;
         DisablePasswordCheckBox.IsChecked = false;
         SettingsNewPasswordBox.Clear();
         SettingsConfirmPasswordBox.Clear();
         CurrentVersionTextBlock.Text = $"Mevcut sürüm: v{UpdateService.CurrentVersion.ToString(3)}";
+        _pendingThemeName = _settings.ThemeName;
+        UpdateSelectedThemeOption();
+        SelectSettingsCategory("appearance");
         ShowModal("settings");
+    }
+
+    private void ApplyAquariumSettings()
+    {
+        _settings.AquariumFishName = string.IsNullOrWhiteSpace(_settings.AquariumFishName)
+            ? "Maviş"
+            : _settings.AquariumFishName.Trim();
+        _settings.AquariumFeedCount = Math.Max(0, _settings.AquariumFeedCount);
+        MiniAquarium.SetSavedState(_settings.AquariumFishName, _settings.AquariumFeedCount);
+        MiniAquarium.Visibility = _settings.ShowMiniAquarium ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void MiniAquarium_FishStateChanged(object? sender, EventArgs e)
+    {
+        var previousName = _settings.AquariumFishName;
+        var previousFeedCount = _settings.AquariumFeedCount;
+        _settings.AquariumFishName = MiniAquarium.FishName;
+        _settings.AquariumFeedCount = MiniAquarium.FeedCount;
+        try
+        {
+            _storage.SaveSettings(_settings);
+        }
+        catch (Exception exception)
+        {
+            _settings.AquariumFishName = previousName;
+            _settings.AquariumFeedCount = previousFeedCount;
+            MiniAquarium.SetSavedState(previousName, previousFeedCount);
+            ShowError("Balık bilgileri kaydedilemedi.", exception);
+        }
+    }
+
+    private void SettingsManualCityTextBox_LostFocus(object sender, RoutedEventArgs e) =>
+        SaveManualCityPreference();
+
+    private void SaveManualCityPreference()
+    {
+        var city = SettingsManualCityTextBox.Text.Trim();
+        var previousCity = _settings.ManualCity ?? string.Empty;
+        if (string.Equals(previousCity, city, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _settings.ManualCity = city;
+        try
+        {
+            _storage.SaveSettings(_settings);
+        }
+        catch (Exception exception)
+        {
+            _settings.ManualCity = previousCity;
+            ShowError("Şehir tercihi kaydedilemedi.", exception);
+            return;
+        }
+
+        InvalidateWeatherAndRefresh();
+    }
+
+    private void InvalidateWeatherAndRefresh()
+    {
+        _currentWeather = null;
+        WeatherOverviewText.Text = "Hava durumu yükleniyor...";
+        WeatherOverviewIcon.Text = "☁";
+        if (string.Equals(_settings.ThemeName, ThemeService.DynamicWeather, StringComparison.Ordinal))
+        {
+            ApplyThemeSafely(_settings.ThemeName);
+        }
+
+        _ = RefreshWeatherAsync();
+    }
+
+    private void SettingsCategoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string category })
+        {
+            SelectSettingsCategory(category);
+        }
+    }
+
+    private void SelectSettingsCategory(string category)
+    {
+        SettingsAppearancePanel.Visibility = category == "appearance" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsWeatherPanel.Visibility = category == "weather" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsSecurityPanel.Visibility = category == "security" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsAboutPanel.Visibility = category == "about" ? Visibility.Visible : Visibility.Collapsed;
+        SettingsPageTitleText.Text = category switch
+        {
+            "appearance" => "Görünüm & Tema",
+            "weather" => "Hava Durumu & Bildirimler",
+            "security" => "Güvenlik & Yedekleme",
+            "about" => "Güncelleme & Hakkında",
+            _ => throw new ArgumentOutOfRangeException(nameof(category))
+        };
+
+        foreach (var button in new[]
+                 {
+                     SettingsAppearanceButton, SettingsWeatherButton,
+                     SettingsSecurityButton, SettingsAboutButton
+                 })
+        {
+            var isSelected = string.Equals(button.Tag as string, category, StringComparison.Ordinal);
+            button.SetResourceReference(Control.BackgroundProperty,
+                isSelected ? "AccentSoftBrush" : "BgSidebarBrush");
+            button.SetResourceReference(Control.ForegroundProperty,
+                isSelected ? "TextPrimaryBrush" : "TextSecondaryBrush");
+        }
+    }
+
+    private void ThemeOption_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is not RadioButton { IsChecked: true, Tag: string themeName })
+        {
+            return;
+        }
+
+        _pendingThemeName = themeName;
+        ApplyThemeSafely(themeName);
+    }
+
+    private void UpdateSelectedThemeOption()
+    {
+        ThemeNightBlueRadioButton.IsChecked = _pendingThemeName == ThemeService.NightBlue;
+        ThemeObsidianRadioButton.IsChecked = _pendingThemeName == ThemeService.Obsidian;
+        ThemeForestNightRadioButton.IsChecked = _pendingThemeName == ThemeService.ForestNight;
+        ThemeWarmNightRadioButton.IsChecked = _pendingThemeName == ThemeService.WarmNight;
+        ThemeDynamicWeatherRadioButton.IsChecked = _pendingThemeName == ThemeService.DynamicWeather;
     }
 
     private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
@@ -846,6 +1273,15 @@ public partial class MainWindow : Window
             return;
         }
 
+        var reminderTime = SettingsReminderTimeTextBox.Text.Trim();
+        if (!TimeOnly.TryParseExact(reminderTime, "HH:mm",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+        {
+            ShowValidationError("Hatırlatma saati 24 saat biçiminde SS:dd olmalıdır (ör. 21:00).",
+                SettingsReminderTimeTextBox);
+            return;
+        }
+
         var newPassword = SettingsNewPasswordBox.Password;
         var confirmPassword = SettingsConfirmPasswordBox.Password;
         if (DisablePasswordCheckBox.IsChecked != true &&
@@ -865,11 +1301,21 @@ public partial class MainWindow : Window
             EditorFontSize = fontSize,
             EditorFontFamily = SettingsFontFamilyComboBox.SelectedItem as string ?? "Segoe UI",
             SortNewestFirst = SettingsSortNewestFirstCheckBox.IsChecked == true,
-            ConfirmDelete = SettingsConfirmDeleteCheckBox.IsChecked == true
+            ConfirmDelete = SettingsConfirmDeleteCheckBox.IsChecked == true,
+            ShowMiniAquarium = SettingsShowAquariumCheckBox.IsChecked == true,
+            AquariumFishName = MiniAquarium.FishName,
+            AquariumFeedCount = MiniAquarium.FeedCount,
+            AutoWeatherBadge = SettingsAutoWeatherBadgeCheckBox.IsChecked == true,
+            ManualCity = SettingsManualCityTextBox.Text.Trim(),
+            StartWithWindows = SettingsStartWithWindowsCheckBox.IsChecked == true,
+            DailyReminderEnabled = SettingsDailyReminderCheckBox.IsChecked == true,
+            ReminderTime = reminderTime,
+            ThemeName = _pendingThemeName
         };
 
         try
         {
+            _reminderService.SetStartWithWindows(_settings.StartWithWindows);
             _storage.SaveSettings(_settings);
             if (DisablePasswordCheckBox.IsChecked == true)
             {
@@ -883,8 +1329,29 @@ public partial class MainWindow : Window
         catch (Exception exception)
         {
             _settings = previousSettings;
+            try
+            {
+                _reminderService.SetStartWithWindows(previousSettings.StartWithWindows);
+            }
+            catch (Exception rollbackException)
+            {
+                ShowError("Ayarlar kaydedilemedi ve Windows başlangıç ayarı geri alınamadı.",
+                    new AggregateException(exception, rollbackException));
+                return;
+            }
+
             ShowError("Ayarlar kaydedilemedi.", exception);
             return;
+        }
+
+        _reminderService.UpdateSettings(_settings);
+        MiniAquarium.Visibility = _settings.ShowMiniAquarium ? Visibility.Visible : Visibility.Collapsed;
+        _pendingThemeName = _settings.ThemeName;
+        ApplyThemeSafely(_settings.ThemeName);
+        UpdateWeatherBadge();
+        if (!string.Equals(previousSettings.ManualCity, _settings.ManualCity, StringComparison.Ordinal))
+        {
+            InvalidateWeatherAndRefresh();
         }
 
         SidebarDiaryTitleText.Text = _settings.DiaryName;
@@ -994,6 +1461,7 @@ public partial class MainWindow : Window
                 CharacterCountText.Text = "0 karakter";
                 LastSavedText.Text = string.Empty;
                 _hasUnsavedChanges = false;
+                UpdateWeatherBadge();
                 return;
             }
 
@@ -1012,6 +1480,7 @@ public partial class MainWindow : Window
             BrushModeLabelText.Text = _brushMode ? "Çizim: Açık" : "Çizim: Kapalı";
             UpdateEditorStatistics();
             LastSavedText.Text = $"Son kaydetme: {_selectedEntry.FormattedUpdatedAt}";
+            UpdateWeatherBadge();
             _hasUnsavedChanges = false;
         }
         finally
@@ -1029,6 +1498,12 @@ public partial class MainWindow : Window
 
         _selectedEntry.Title = EntryTitleTextBox.Text;
         _selectedEntry.Content = EntryContentTextBox.Text;
+        if (!string.IsNullOrWhiteSpace(_selectedEntry.Title) ||
+            !string.IsNullOrWhiteSpace(_selectedEntry.Content))
+        {
+            RequestWeatherBadge(_selectedEntry);
+        }
+
         MarkEntryChanged();
         UpdateEditorStatistics();
     }
@@ -2836,6 +3311,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (_activeModal == "settings" &&
+            !string.Equals(_pendingThemeName, _settings.ThemeName, StringComparison.Ordinal))
+        {
+            _pendingThemeName = _settings.ThemeName;
+            ApplyThemeSafely(_settings.ThemeName);
+        }
+
         _isClosingModal = true;
         var card = GetModalCard(_activeModal);
         card.BeginAnimation(OpacityProperty, new DoubleAnimation(card.Opacity, 0, TimeSpan.FromMilliseconds(140)));
@@ -2930,6 +3412,11 @@ public partial class MainWindow : Window
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (AuthenticationOverlayGrid.Visibility == Visibility.Visible)
+        {
+            return;
+        }
+
+        if (MiniAquarium.IsEditingFishName && e.Key == Key.Escape)
         {
             return;
         }
@@ -3226,6 +3713,7 @@ public partial class MainWindow : Window
 
         _autoSaveTimer.Stop();
         _savedNotificationTimer.Stop();
+        _themeTimer.Stop();
         ModalOverlayGrid.Visibility = Visibility.Collapsed;
         _activeModal = string.Empty;
         _isClosingModal = false;
@@ -3303,6 +3791,8 @@ public partial class MainWindow : Window
             CryptographicOperations.ZeroMemory(_encryptionKey);
             _encryptionKey = null;
         }
+
+        _reminderService.Dispose();
     }
 
     private void ShowError(string message, Exception exception)

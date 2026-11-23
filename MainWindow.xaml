@@ -1,9 +1,10 @@
-﻿<Window x:Class="GunlukUygulamasi.MainWindow"
+<Window x:Class="GunlukUygulamasi.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GunlukUygulamasi"
+        xmlns:controls="clr-namespace:GunlukUygulamasi.Controls"
         mc:Ignorable="d"
         Title="Kişisel Günlüğüm"
         Icon="app.ico"
@@ -12,10 +13,11 @@
         MinHeight="560"
         MinWidth="840"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BgPrimaryBrush}"
-        Foreground="{StaticResource TextPrimaryBrush}"
+        Background="{DynamicResource BgPrimaryBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
         FontFamily="{StaticResource AppFontFamily}"
         PreviewKeyDown="Window_PreviewKeyDown"
+        StateChanged="Window_StateChanged"
         Closing="Window_Closing">
 
     <Window.Resources>
@@ -29,7 +31,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Path Data="M8,5L15,12L8,19" Fill="Transparent"
-                      Stroke="{StaticResource TextSecondaryBrush}" StrokeThickness="1.7"
+                      Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.7"
                       StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                       Width="10" Height="10" Stretch="Uniform" VerticalAlignment="Center">
                     <Path.Style>
@@ -52,19 +54,19 @@
                 <TextBlock Grid.Column="1"
                            Text="{Binding Name, Converter={StaticResource ArchiveGroupHeaderConverter}}"
                            FontSize="12.5" FontWeight="SemiBold"
-                           Foreground="#F1F5F9"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                <Border Grid.Column="2" Background="#2D325A" CornerRadius="9"
+                <Border Grid.Column="2" Background="{DynamicResource AccentSoftBrush}" CornerRadius="9"
                         MinWidth="24" Padding="6,2" Margin="8,0,0,0"
                         VerticalAlignment="Center">
                     <TextBlock Text="{Binding ItemCount}" FontSize="10.5" FontWeight="SemiBold"
-                               Foreground="#A5B4FC"
+                               Foreground="{DynamicResource AccentHoverBrush}"
                                HorizontalAlignment="Center" />
                 </Border>
             </Grid>
         </DataTemplate>
         <Style x:Key="ArchiveExpanderStyle" TargetType="Expander">
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Expander">
@@ -86,11 +88,11 @@
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter TargetName="HeaderBorder" Property="Background"
-                                                        Value="{StaticResource BgElevatedBrush}" />
+                                                        Value="{DynamicResource BgElevatedBrush}" />
                                             </Trigger>
                                             <Trigger Property="IsChecked" Value="True">
                                                 <Setter TargetName="HeaderBorder" Property="Background"
-                                                        Value="#20283A" />
+                                                        Value="{DynamicResource BgElevatedBrush}" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -109,9 +111,9 @@
             </Setter>
         </Style>
         <Style x:Key="PhotoAspectRatioToggleStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="{StaticResource BgElevatedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+            <Setter Property="Background" Value="{DynamicResource BgElevatedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="11,7" />
             <Setter Property="Cursor" Value="Hand" />
@@ -126,12 +128,69 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ToggleBorder" Property="BorderBrush" Value="{StaticResource BorderFocusBrush}" />
+                                <Setter TargetName="ToggleBorder" Property="BorderBrush" Value="{DynamicResource BorderFocusBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="ToggleBorder" Property="Background" Value="{StaticResource AccentSoftBrush}" />
-                                <Setter TargetName="ToggleBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                                <Setter Property="Foreground" Value="#C7D2FE" />
+                                <Setter TargetName="ToggleBorder" Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+                                <Setter TargetName="ToggleBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SettingsCategoryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource BgSidebarBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,11" />
+            <Setter Property="Margin" Value="0,3" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="CategoryBorder" Background="{TemplateBinding Background}"
+                                CornerRadius="9" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CategoryBorder" Property="Background"
+                                        Value="{DynamicResource BgHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="CategoryBorder" Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ThemeCardRadioStyle" TargetType="RadioButton">
+            <Setter Property="Width" Value="245" />
+            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="ThemeCardBorder" Background="{DynamicResource BgSurfaceBrush}"
+                                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
+                                CornerRadius="10" Padding="12">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ThemeCardBorder" Property="BorderBrush"
+                                        Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="ThemeCardBorder" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ThemeCardBorder" Property="Background"
+                                        Value="{DynamicResource BgHoverBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -141,7 +200,7 @@
     </Window.Resources>
 
     <Grid>
-        <Grid x:Name="MainWorkspaceGrid">
+        <Grid x:Name="MainWorkspaceGrid" Background="{DynamicResource BgPrimaryBrush}">
             <Grid.Effect>
                 <BlurEffect x:Name="AuthenticationBlurEffect" Radius="0" />
             </Grid.Effect>
@@ -150,8 +209,8 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <!-- SOL KENAR ÇUBUĞU -->
-            <Border Grid.Column="0" Background="{StaticResource BgSidebarBrush}"
-                    BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="{DynamicResource BgSidebarBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,1,0">
                 <Grid Margin="18,20,18,16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -162,17 +221,17 @@
                     </Grid.RowDefinitions>
 
                     <DockPanel Grid.Row="0" Margin="2,0,2,16">
-                        <Border DockPanel.Dock="Right" Background="{StaticResource AccentSoftBrush}"
+                        <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSoftBrush}"
                                 CornerRadius="10" Padding="10,4" VerticalAlignment="Center">
                             <TextBlock x:Name="EntryCountText" Text="0 kayıt" FontSize="12"
-                                       FontWeight="SemiBold" Foreground="#A5B4FC" />
+                                       FontWeight="SemiBold" Foreground="{DynamicResource AccentHoverBrush}" />
                         </Border>
                         <StackPanel>
                             <TextBlock x:Name="SidebarDiaryTitleText" Text="Kişisel Günlüğüm" FontSize="19"
-                                       FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
+                                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
                                        TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="Düşüncelerini güvenle sakla" FontSize="12"
-                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,0" />
+                                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" />
                         </StackPanel>
                     </DockPanel>
 
@@ -180,7 +239,7 @@
                             Click="NewEntryButton_Click" Margin="0,0,0,14">
                         <StackPanel Orientation="Horizontal">
                             <Path Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"
-                                  Fill="#FFFFFF" Stretch="Uniform" Width="14" Height="14" Margin="0,0,8,0" />
+                                  Fill="{DynamicResource TextPrimaryBrush}" Stretch="Uniform" Width="14" Height="14" Margin="0,0,8,0" />
                             <TextBlock Text="Yeni Günlük Ekle" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -190,9 +249,9 @@
                                  ToolTip="Metinle ara veya #etiket yaz"
                                  Padding="34,9,12,9" TextChanged="SearchBox_TextChanged" />
                         <Path Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"
-                              Fill="{StaticResource TextMutedBrush}" Stretch="Uniform" Width="14" Height="14"
+                              Fill="{DynamicResource TextMutedBrush}" Stretch="Uniform" Width="14" Height="14"
                               HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0" IsHitTestVisible="False" />
-                        <TextBlock Text="Günlüklerde ara..." Foreground="{StaticResource TextMutedBrush}" FontSize="13"
+                        <TextBlock Text="Günlüklerde ara..." Foreground="{DynamicResource TextMutedBrush}" FontSize="13"
                                    VerticalAlignment="Center" Margin="36,0,12,0" IsHitTestVisible="False">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
@@ -237,22 +296,22 @@
                             <DataTemplate>
                                 <StackPanel>
                                     <DockPanel Margin="0,0,0,5">
-                                        <Border DockPanel.Dock="Right" Background="#242C3F" CornerRadius="7"
+                                        <Border DockPanel.Dock="Right" Background="{DynamicResource BgHoverBrush}" CornerRadius="7"
                                                 Padding="6,3" VerticalAlignment="Center" Margin="0,0,5,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <Image Source="{Binding Mood, Converter={StaticResource MoodIconConverter}}"
                                                        Width="20" Height="20" Stretch="Uniform" Margin="0,0,5,0"
                                                        RenderOptions.BitmapScalingMode="NearestNeighbor" />
                                                 <TextBlock Text="{Binding Mood}" FontSize="10.5"
-                                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" />
                                             </StackPanel>
                                         </Border>
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding ShortDateBadge}"
-                                                   FontSize="11.5" FontWeight="Medium" Foreground="#A5B4FC"
+                                                   FontSize="11.5" FontWeight="Medium" Foreground="{DynamicResource AccentHoverBrush}"
                                                    VerticalAlignment="Center" Margin="8,0,0,0" />
                                         <Path DockPanel.Dock="Left"
                                               Data="M16,3L19,6L15,10L14,15L12,17L10,14L7,11L9,9L14,8Z M11,15L5,21"
-                                              Fill="Transparent" Stroke="{StaticResource AccentBrush}"
+                                              Fill="Transparent" Stroke="{DynamicResource AccentBrush}"
                                               StrokeThickness="1.7" StrokeStartLineCap="Round"
                                               StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                               Width="14" Height="14" Stretch="Uniform" Margin="0,0,5,0">
@@ -268,13 +327,13 @@
                                             </Path.Style>
                                         </Path>
                                         <TextBlock Text="{Binding DisplayTitle}" FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
                                     </DockPanel>
                                     <TextBlock Text="{Binding ContentPreview}" FontSize="12.5"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
                                                TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxHeight="36" LineHeight="18" />
                                     <TextBlock Text="{Binding TagsDisplay}" FontSize="10.5" Margin="0,5,0,0"
-                                               Foreground="#A5B4FC" TextTrimming="CharacterEllipsis" />
+                                               Foreground="{DynamicResource AccentHoverBrush}" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -283,13 +342,13 @@
                     <StackPanel x:Name="EmptyListPlaceholder" Grid.Row="3" VerticalAlignment="Center"
                                 HorizontalAlignment="Center" Visibility="Collapsed" Margin="12">
                         <TextBlock Text="Henüz günlük kaydı yok" FontSize="14" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                                   Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
                         <TextBlock Text="Başlamak için yukarıdaki butona tıklayın." FontSize="12"
-                                   Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"
                                    TextAlignment="Center" Margin="0,4,0,0" />
                     </StackPanel>
 
-                    <Border Grid.Row="4" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,1,0,0"
+                    <Border Grid.Row="4" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,1,0,0"
                             Padding="0,14,0,0" Margin="0,10,0,0">
                         <StackPanel>
                         <Button Style="{StaticResource SecondaryButtonStyle}" Click="ExportAllButton_Click"
@@ -303,11 +362,13 @@
                                 <TextBlock Text="Tüm Günlükleri Dışa Aktar" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
+                        <controls:PixelAquariumControl x:Name="MiniAquarium" Height="120"
+                                                       Margin="0,0,0,8" />
                         <Button x:Name="SettingsButton" Style="{StaticResource SecondaryButtonStyle}"
                                 Click="SettingsButton_Click" HorizontalContentAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <Path Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
-                                      Fill="{StaticResource TextSecondaryBrush}" Stretch="Uniform" Width="15" Height="15" Margin="0,0,8,0" />
+                                      Fill="{DynamicResource TextSecondaryBrush}" Stretch="Uniform" Width="15" Height="15" Margin="0,0,8,0" />
                                 <TextBlock Text="Ayarlar" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -316,17 +377,17 @@
                 </Grid>
             </Border>
             <!-- SAĞ EDİTÖR ALANI -->
-            <Grid Grid.Column="1" Background="{StaticResource BgPrimaryBrush}">
+            <Grid Grid.Column="1" Background="{DynamicResource BgPrimaryBrush}">
                 <StackPanel x:Name="NoSelectionState" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="40">
-                    <Border Width="72" Height="72" CornerRadius="20" Background="{StaticResource AccentSoftBrush}"
+                    <Border Width="72" Height="72" CornerRadius="20" Background="{DynamicResource AccentSoftBrush}"
                             Margin="0,0,0,18">
                         <Path Data="M19,2L14,6.5V17.5L19,13V2M6.5,5C4.55,5 2.45,5.4 1,6.5V21.16C1,21.41 1.25,21.66 1.5,21.66C1.6,21.66 1.65,21.59 1.75,21.59C3.1,20.94 5.05,20.5 6.5,20.5C8.45,20.5 10.55,20.9 12,22C13.35,21.15 15.8,20.5 17.5,20.5C19.15,20.5 20.85,20.81 22.25,21.56C22.35,21.61 22.4,21.59 22.5,21.59C22.75,21.59 23,21.34 23,21.09V6.5C22.4,6.05 21.75,5.75 21,5.5V19C19.9,18.65 18.7,18.5 17.5,18.5C15.8,18.5 13.35,19.15 12,20V6.5C10.55,5.4 8.45,5 6.5,5Z"
-                              Fill="#818CF8" Stretch="Uniform" Width="32" Height="32" />
+                              Fill="{DynamicResource AccentBrush}" Stretch="Uniform" Width="32" Height="32" />
                     </Border>
                     <TextBlock Text="Bir günlük seçin veya yeni bir sayfa açın" FontSize="20" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                               Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
                     <TextBlock Text="Günlükleriniz şifrelenerek cihazınızda saklanır."
-                               FontSize="13.5" Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="13.5" Foreground="{DynamicResource TextSecondaryBrush}"
                                HorizontalAlignment="Center" Margin="0,8,0,22" />
                     <Button Style="{StaticResource PrimaryButtonStyle}" Click="NewEntryButton_Click"
                             HorizontalAlignment="Center" Padding="20,11">
@@ -348,16 +409,25 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="GÜNLÜK BAŞLIĞI" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextMutedBrush}" Margin="2,0,0,8" />
+                            <Grid Margin="2,0,0,8">
+                                <TextBlock Text="GÜNLÜK BAŞLIĞI" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
+                                <Border x:Name="WeatherBadgeBorder" HorizontalAlignment="Right"
+                                        Visibility="Collapsed" Background="{DynamicResource AccentSoftBrush}"
+                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                        BorderThickness="1" CornerRadius="10" Padding="9,3">
+                                    <TextBlock x:Name="WeatherBadgeText" FontSize="11"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </Border>
+                            </Grid>
                             <Grid>
                                 <TextBox x:Name="EntryTitleTextBox" Style="{StaticResource DarkTextBoxStyle}"
                                          FontSize="22" FontWeight="SemiBold" Padding="12,8"
-                                         Background="{StaticResource BgSurfaceBrush}"
-                                         BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1"
+                                         Background="{DynamicResource BgSurfaceBrush}"
+                                         BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
                                          TextChanged="EntryTextChanged" ToolTip="Günlük başlığını yazın" />
                                 <TextBlock Text="Başlık girin..." FontSize="22" FontWeight="SemiBold"
-                                           Foreground="{StaticResource TextMutedBrush}" Margin="13,8,12,8"
+                                           Foreground="{DynamicResource TextMutedBrush}" Margin="13,8,12,8"
                                            IsHitTestVisible="False">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
@@ -425,7 +495,7 @@
                                          Padding="10,7" ToolTip="Etiketleri boşlukla ayırarak yazın"
                                          TextChanged="EntryTagsTextBox_TextChanged" />
                                 <TextBlock Text="#etiket ekle..." FontSize="13.5"
-                                           Foreground="{StaticResource TextMutedBrush}" Margin="11,7,10,7"
+                                           Foreground="{DynamicResource TextMutedBrush}" Margin="11,7,10,7"
                                            IsHitTestVisible="False">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
@@ -510,20 +580,20 @@
                                               StrokeLineJoin="Round" Width="17" Height="17" Stretch="Uniform" />
                                     </Button>
                                     <TextBlock Text="Renk" FontSize="11"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
                                                VerticalAlignment="Center" Margin="0,0,6,4" />
                                     <StackPanel x:Name="BrushPalettePanel" Orientation="Horizontal"
                                                 VerticalAlignment="Center" Margin="0,0,0,4" />
                                 </WrapPanel>
                                 <WrapPanel VerticalAlignment="Center">
                                     <TextBlock Text="Boyut" FontSize="11"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
                                                VerticalAlignment="Center" Margin="0,0,6,4" />
                                     <Slider x:Name="BrushSizeSlider" Minimum="2" Maximum="18" Value="4"
                                             Width="105" VerticalAlignment="Center" Margin="0,0,8,4"
                                             ToolTip="Kalem, fosforlu kalem ve silgi boyutu" />
                                     <Ellipse x:Name="BrushSizePreviewEllipse" Width="8" Height="8"
-                                             Fill="#FFFFFF" Stroke="#64748B" StrokeThickness="1"
+                                             Fill="{DynamicResource TextPrimaryBrush}" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"
                                              VerticalAlignment="Center" Margin="0,0,12,4"
                                              ToolTip="Seçili aracın anlık boyut önizlemesi" />
                                     <Button x:Name="UndoStrokeButton" Style="{StaticResource SecondaryButtonStyle}"
@@ -578,23 +648,41 @@
                         </Grid>
                     </Grid>
                     <Grid Grid.Row="3" Margin="0,12,0,0">
-                        <TextBlock x:Name="LastSavedText" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                        <TextBlock x:Name="LastSavedText" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"
                                    HorizontalAlignment="Left" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <TextBlock x:Name="WordCountText" Text="0 kelime" FontSize="12"
-                                       Foreground="{StaticResource TextMutedBrush}" />
-                            <TextBlock Text="  ·  " FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <TextBlock Text="  ·  " FontSize="12" Foreground="{DynamicResource TextMutedBrush}" />
                             <TextBlock x:Name="CharacterCountText" Text="0 karakter" FontSize="12"
-                                       Foreground="{StaticResource TextMutedBrush}" />
+                                       Foreground="{DynamicResource TextMutedBrush}" />
                         </StackPanel>
                     </Grid>
                 </Grid>
+                <Border x:Name="WeatherOverviewCapsule" Panel.ZIndex="4"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,18,0"
+                        Padding="12,6" Background="{DynamicResource BgSurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
+                        CornerRadius="12" Opacity="0.92" Cursor="Hand" Visibility="Visible"
+                        MouseLeftButtonUp="WeatherOverviewCapsule_MouseLeftButtonUp"
+                        ToolTip="Hava durumunu yenile">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="WeatherOverviewIcon" Text="☁"
+                                   FontFamily="Segoe UI Symbol" FontSize="15"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock x:Name="WeatherOverviewText" Text="Hava durumu yükleniyor..."
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
             </Grid>
         </Grid>
-        <Grid x:Name="ModalOverlayGrid" Panel.ZIndex="10" Background="#B8000000"
+        <Grid x:Name="ModalOverlayGrid" Panel.ZIndex="10" Background="{DynamicResource ModalOverlayBrush}"
               Visibility="Collapsed" Opacity="0">
             <Border x:Name="NewEntryModalCard" Width="560" MaxHeight="680" Padding="28"
-                    Background="{StaticResource BgSidebarBrush}" BorderBrush="{StaticResource BorderSubtleBrush}"
+                    Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="1" CornerRadius="16" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Visibility="Collapsed">
                 <Grid>
@@ -608,17 +696,17 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Text="Yeni günlük" FontSize="21" FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,20" />
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,20" />
                     <StackPanel Grid.Row="1" Margin="0,0,0,14">
-                        <TextBlock Text="Başlık" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                        <TextBlock Text="Başlık" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
                         <TextBox x:Name="NewEntryTitleTextBox" Style="{StaticResource DarkTextBoxStyle}" />
                     </StackPanel>
                     <StackPanel Grid.Row="2" Margin="0,0,0,14">
-                        <TextBlock Text="Tarih" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                        <TextBlock Text="Tarih" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
                         <DatePicker x:Name="NewEntryDatePicker" Style="{StaticResource DarkDatePickerStyle}" />
                     </StackPanel>
                     <StackPanel Grid.Row="3" Margin="0,0,0,14">
-                        <TextBlock Text="Ruh hali" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                        <TextBlock Text="Ruh hali" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
                         <ComboBox x:Name="NewEntryMoodComboBox" Style="{StaticResource DarkComboBoxStyle}"
                                   Height="38" VerticalContentAlignment="Center">
                             <ComboBox.ItemTemplate>
@@ -636,12 +724,12 @@
                         </ComboBox>
                     </StackPanel>
                     <StackPanel Grid.Row="4" Margin="0,0,0,14">
-                        <TextBlock Text="Etiketler (#etiket)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                        <TextBlock Text="Etiketler (#etiket)" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
                         <TextBox x:Name="NewEntryTagsTextBox" Style="{StaticResource DarkTextBoxStyle}"
                                  ToolTip="#iş #aile #fikir" />
                     </StackPanel>
                     <StackPanel Grid.Row="5" Margin="0,0,0,20">
-                        <TextBlock Text="Neler oldu?" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                        <TextBlock Text="Neler oldu?" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
                         <TextBox x:Name="NewEntryContentTextBox" Style="{StaticResource DarkTextBoxStyle}"
                                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
                                  MinHeight="120" />
@@ -662,88 +750,359 @@
                     </StackPanel>
                 </Grid>
             </Border>
-            <Border x:Name="SettingsModalCard" Width="560" MaxHeight="700" Padding="28"
-                    Background="{StaticResource BgSidebarBrush}" BorderBrush="{StaticResource BorderSubtleBrush}"
+            <Border x:Name="SettingsModalCard" Width="820" MaxHeight="690" Padding="0"
+                    Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="1" CornerRadius="16" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Visibility="Collapsed">
-                <StackPanel>
-                    <ScrollViewer MaxHeight="640" VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="190" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource BgPrimaryBrush}"
+                            CornerRadius="15,0,0,15" Padding="16">
                         <StackPanel>
-                            <TextBlock Text="Ayarlar" FontSize="21" FontWeight="Bold"
-                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,20" />
-                            <TextBlock Text="Günlük adı" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
-                            <TextBox x:Name="SettingsDiaryNameTextBox" Style="{StaticResource DarkTextBoxStyle}" Margin="0,0,0,16" />
-                            <TextBlock Text="Yazı tipi" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
-                            <ComboBox x:Name="SettingsFontFamilyComboBox" Style="{StaticResource DarkComboBoxStyle}"
-                                      Height="38" Margin="0,0,0,14" />
-                            <TextBlock Text="Editör yazı boyutu (10–32)" FontSize="12"
-                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
-                            <TextBox x:Name="SettingsFontSizeTextBox" Style="{StaticResource DarkTextBoxStyle}"
-                                     Margin="0,0,0,18" />
-                            <CheckBox x:Name="SettingsSortNewestFirstCheckBox" Style="{StaticResource DarkCheckBoxStyle}"
-                                      Content="En yeni günlükleri önce göster" Margin="0,0,0,14" />
-                            <CheckBox x:Name="SettingsConfirmDeleteCheckBox" Style="{StaticResource DarkCheckBoxStyle}"
-                                      Content="Günlük silerken onay iste" Margin="0,0,0,14" />
-                            <CheckBox x:Name="DisablePasswordCheckBox" Style="{StaticResource DarkCheckBoxStyle}"
-                                      Content="PIN/parola korumasını kapat" Margin="0,0,0,14" />
-                            <TextBlock Text="Şifre ipucu (isteğe bağlı)" FontSize="12"
-                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
-                            <TextBox x:Name="SettingsPasswordHintTextBox" Style="{StaticResource DarkTextBoxStyle}"
-                                     MaxLength="120" Margin="0,0,0,14" />
-                            <TextBlock Text="Yeni PIN/parola (en az 6 karakter; boş bırakarak mevcut parolayı koruyun)"
-                                       FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="2,0,0,6" />
-                            <PasswordBox x:Name="SettingsNewPasswordBox" Background="{StaticResource BgSurfaceBrush}"
-                                         Foreground="{StaticResource TextPrimaryBrush}" Padding="12,9" Margin="0,0,0,10" />
-                            <PasswordBox x:Name="SettingsConfirmPasswordBox" Background="{StaticResource BgSurfaceBrush}"
-                                         Foreground="{StaticResource TextPrimaryBrush}" Padding="12,9" Margin="0,0,0,18" />
-                            <Border Padding="14" Margin="0,0,0,18"
-                                    Background="{StaticResource BgSurfaceBrush}"
-                                    BorderBrush="{StaticResource BorderSubtleBrush}"
-                                    BorderThickness="1" CornerRadius="10">
-                                <StackPanel>
-                                    <TextBlock Text="Güncellemeler" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6" />
-                                    <TextBlock x:Name="CurrentVersionTextBlock" FontSize="11"
-                                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" />
-                                    <StackPanel Orientation="Horizontal">
-                                        <Button x:Name="CheckForUpdatesButton"
-                                                Style="{StaticResource SecondaryButtonStyle}"
-                                                Content="Güncellemeleri Denetle"
-                                                Click="CheckForUpdatesButton_Click" Margin="0,0,8,0" />
-                                        <Button x:Name="ViewReleaseNotesButton"
-                                                Style="{StaticResource SecondaryButtonStyle}"
-                                                Content="Son Sürüm Notlarını Görüntüle"
-                                                Click="ViewReleaseNotesButton_Click" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Click="CancelModalButton_Click"
-                                        Content="İptal" Margin="0,0,8,0" />
-                                <Button Style="{StaticResource PrimaryButtonStyle}" Click="SaveSettingsButton_Click"
-                                        ToolTip="Ayarları kaydet">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="M5,3H17L21,7V21H3V3Z M7,3V9H16V3 M7,21V13H17V21"
-                                              Fill="Transparent" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                                              StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                              StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" />
-                                        <TextBlock Text="Ayarları Kaydet" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
+                            <TextBlock Text="Ayarlar" FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="4,4,0,2" />
+                            <TextBlock Text="Günlüğünü kişiselleştir"
+                                       FontSize="11" Foreground="{DynamicResource TextMutedBrush}"
+                                       Margin="4,0,0,22" />
+                            <Button x:Name="SettingsAppearanceButton" Tag="appearance"
+                                    Style="{StaticResource SettingsCategoryButtonStyle}"
+                                    Click="SettingsCategoryButton_Click" Content="Görünüm &amp; Tema" />
+                            <Button x:Name="SettingsWeatherButton" Tag="weather"
+                                    Style="{StaticResource SettingsCategoryButtonStyle}"
+                                    Click="SettingsCategoryButton_Click" Content="Hava Durumu &amp; Bildirimler" />
+                            <Button x:Name="SettingsSecurityButton" Tag="security"
+                                    Style="{StaticResource SettingsCategoryButtonStyle}"
+                                    Click="SettingsCategoryButton_Click" Content="Güvenlik &amp; Yedekleme" />
+                            <Button x:Name="SettingsAboutButton" Tag="about"
+                                    Style="{StaticResource SettingsCategoryButtonStyle}"
+                                    Click="SettingsCategoryButton_Click" Content="Güncelleme &amp; Hakkında" />
                         </StackPanel>
-                    </ScrollViewer>
-                </StackPanel>
+                    </Border>
+                    <Grid Grid.Column="1" Margin="20,20,20,18">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <TextBlock x:Name="SettingsPageTitleText" Text="Görünüm &amp; Tema"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       VerticalAlignment="Center" />
+                            <Button Style="{StaticResource GhostIconButtonStyle}"
+                                    Click="CancelModalButton_Click" HorizontalAlignment="Right"
+                                    ToolTip="Ayarları kapat" AutomationProperties.Name="Ayarları kapat">
+                                <Path Data="M6,6 L18,18 M18,6 L6,18"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      StrokeThickness="1.8" StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round" Width="16" Height="16" />
+                            </Button>
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" MaxHeight="510"
+                                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <Grid>
+                                <StackPanel x:Name="SettingsAppearancePanel">
+                                    <TextBlock Text="Bir renk paleti seçin"
+                                               FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="Tema önizlemesi anında uygulanır; kaydetmeden kapatırsanız geri alınır."
+                                               FontSize="11.5" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,14" />
+                                    <WrapPanel>
+                                        <RadioButton x:Name="ThemeNightBlueRadioButton" GroupName="AppTheme"
+                                                     Tag="Gece Mavisi" Style="{StaticResource ThemeCardRadioStyle}"
+                                                     Checked="ThemeOption_Checked">
+                                            <StackPanel>
+                                                <TextBlock Text="Gece Mavisi" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,9,0,7">
+                                                    <Border Width="23" Height="8" Background="#0D1017" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#191F2D" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#6366F1" CornerRadius="4" />
+                                                </StackPanel>
+                                                <TextBlock Text="Derin lacivert ve indigo vurgular"
+                                                           FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton x:Name="ThemeObsidianRadioButton" GroupName="AppTheme"
+                                                     Tag="Obsidyen" Style="{StaticResource ThemeCardRadioStyle}"
+                                                     Checked="ThemeOption_Checked">
+                                            <StackPanel>
+                                                <TextBlock Text="Obsidyen" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,9,0,7">
+                                                    <Border Width="23" Height="8" Background="#101114" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#1D2026" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#93A4B8" CornerRadius="4" />
+                                                </StackPanel>
+                                                <TextBlock Text="Antrasit zemin ve gümüş vurgular"
+                                                           FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton x:Name="ThemeForestNightRadioButton" GroupName="AppTheme"
+                                                     Tag="Orman Gecesi" Style="{StaticResource ThemeCardRadioStyle}"
+                                                     Checked="ThemeOption_Checked">
+                                            <StackPanel>
+                                                <TextBlock Text="Orman Gecesi" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,9,0,7">
+                                                    <Border Width="23" Height="8" Background="#0B1210" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#15231D" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#10B981" CornerRadius="4" />
+                                                </StackPanel>
+                                                <TextBlock Text="Koyu yeşil ve zümrüt vurgular"
+                                                           FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton x:Name="ThemeWarmNightRadioButton" GroupName="AppTheme"
+                                                     Tag="Sıcak Gece" Style="{StaticResource ThemeCardRadioStyle}"
+                                                     Checked="ThemeOption_Checked">
+                                            <StackPanel>
+                                                <TextBlock Text="Sıcak Gece" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,9,0,7">
+                                                    <Border Width="23" Height="8" Background="#15110E" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#251D17" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#D99A36" CornerRadius="4" />
+                                                </StackPanel>
+                                                <TextBlock Text="Kömür tonları ve kehribar vurgular"
+                                                           FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton x:Name="ThemeDynamicWeatherRadioButton" GroupName="AppTheme"
+                                                     Tag="Hava Durumuna Göre Otomatik"
+                                                     Style="{StaticResource ThemeCardRadioStyle}"
+                                                     Checked="ThemeOption_Checked">
+                                            <StackPanel>
+                                                <TextBlock Text="Hava Durumuna Göre Otomatik"
+                                                           FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,9,0,7">
+                                                    <Border Width="23" Height="8" Background="#F59E0B" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#38BDF8" CornerRadius="4" Margin="0,0,5,0" />
+                                                    <Border Width="23" Height="8" Background="#BAE6FD" CornerRadius="4" />
+                                                </StackPanel>
+                                                <TextBlock Text="Günün saati ve hava durumuna uyum sağlar"
+                                                           FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </WrapPanel>
+                                    <Border Padding="14" Margin="0,6,0,12"
+                                            Background="{DynamicResource BgSurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="10">
+                                        <StackPanel>
+                                            <TextBlock Text="Günlük görünümü" FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12" />
+                                            <TextBlock Text="Günlük adı" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                                            <TextBox x:Name="SettingsDiaryNameTextBox"
+                                                     Style="{StaticResource DarkTextBoxStyle}" Margin="0,0,0,12" />
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="120" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Margin="0,0,12,0">
+                                                    <TextBlock Text="Yazı tipi" FontSize="12"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                                                    <ComboBox x:Name="SettingsFontFamilyComboBox"
+                                                              Style="{StaticResource DarkComboBoxStyle}" Height="38" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="Yazı boyutu (10–32)" FontSize="12"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                                                    <TextBox x:Name="SettingsFontSizeTextBox"
+                                                             Style="{StaticResource DarkTextBoxStyle}" />
+                                                </StackPanel>
+                                            </Grid>
+                                            <CheckBox x:Name="SettingsSortNewestFirstCheckBox"
+                                                      Style="{StaticResource DarkCheckBoxStyle}"
+                                                      Content="En yeni günlükleri önce göster" Margin="0,14,0,10" />
+                                            <CheckBox x:Name="SettingsConfirmDeleteCheckBox"
+                                                      Style="{StaticResource DarkCheckBoxStyle}"
+                                                      Content="Günlük silerken onay iste" />
+                                            <CheckBox x:Name="SettingsShowAquariumCheckBox"
+                                                      Style="{StaticResource DarkCheckBoxStyle}"
+                                                      Content="Mini akvaryumu göster"
+                                                      Margin="0,14,0,0" />
+                                            <TextBlock Text="Sol menüde sakin bir pixel balık akvaryumu gösterir."
+                                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="30,4,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel x:Name="SettingsWeatherPanel" Visibility="Collapsed">
+                                    <TextBlock Text="Hava durumu tercihleri" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="Konum, hava durumu kapsülü ve günlük damgaları buradan yönetilir."
+                                               FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}"
+                                               TextWrapping="Wrap" Margin="0,0,0,14" />
+                                    <Border Padding="14" Margin="0,0,0,12"
+                                            Background="{DynamicResource BgSurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="10">
+                                        <StackPanel>
+                                            <CheckBox x:Name="SettingsAutoWeatherBadgeCheckBox"
+                                                      Style="{StaticResource DarkCheckBoxStyle}"
+                                                      Content="Günlük sayfalarına hava durumu damgası ekle"
+                                                      Margin="0,0,0,6" />
+                                            <TextBlock Text="Yeni sayfa oluşturulduğunda konum ve hava durumu bilgisi kaydedilir."
+                                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="30,0,0,12" TextWrapping="Wrap" />
+                                            <TextBlock Text="Şehir adı (boş bırakılırsa otomatik konum)"
+                                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="2,0,0,6" />
+                                            <TextBox x:Name="SettingsManualCityTextBox"
+                                                     Style="{StaticResource DarkTextBoxStyle}" MaxLength="100"
+                                                     LostFocus="SettingsManualCityTextBox_LostFocus" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Padding="14" Margin="0,0,0,12"
+                                            Background="{DynamicResource BgSurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="10">
+                                        <StackPanel>
+                                            <TextBlock Text="Hatırlatıcı" FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12" />
+                                            <CheckBox x:Name="SettingsStartWithWindowsCheckBox"
+                                                      Style="{StaticResource DarkCheckBoxStyle}"
+                                                      Content="Windows ile otomatik başlat"
+                                                      Margin="0,0,0,10" />
+                                            <CheckBox x:Name="SettingsDailyReminderCheckBox"
+                                                      Style="{StaticResource DarkCheckBoxStyle}"
+                                                      Content="Günlük hatırlatıcı bildirimi göster"
+                                                      Margin="0,0,0,12" />
+                                            <TextBlock Text="Hatırlatma saati (24 saat biçimi, ör. 21:00)"
+                                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="2,0,0,6" />
+                                            <TextBox x:Name="SettingsReminderTimeTextBox"
+                                                     Style="{StaticResource DarkTextBoxStyle}" MaxLength="5" Width="150"
+                                                     HorizontalAlignment="Left" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel x:Name="SettingsSecurityPanel" Visibility="Collapsed">
+                                    <TextBlock Text="Güvenlik seçenekleri" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="Günlük verileri cihazınızda şifreli olarak saklanır."
+                                               FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Margin="0,0,0,14" />
+                                    <Border Padding="14" Margin="0,0,0,12"
+                                            Background="{DynamicResource BgSurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="10">
+                                        <StackPanel>
+                                            <TextBlock Text="PIN / parola" FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10" />
+                                            <CheckBox x:Name="DisablePasswordCheckBox"
+                                                      Style="{StaticResource DarkCheckBoxStyle}"
+                                                      Content="Otomatik giriş: PIN/parola sormadan aç"
+                                                      Margin="0,0,0,5" />
+                                            <TextBlock Text="Bu seçenek cihazınıza erişebilen kişilerin günlüğü açmasına izin verir."
+                                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="30,0,0,12" TextWrapping="Wrap" />
+                                            <TextBlock Text="Şifre ipucu (isteğe bağlı)" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0,0,6" />
+                                            <TextBox x:Name="SettingsPasswordHintTextBox"
+                                                     Style="{StaticResource DarkTextBoxStyle}" MaxLength="120"
+                                                     Margin="0,0,0,12" />
+                                            <TextBlock Text="Yeni PIN/parola (en az 6 karakter; boş bırakılırsa değişmez)"
+                                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="2,0,0,6" />
+                                            <PasswordBox x:Name="SettingsNewPasswordBox"
+                                                         Background="{DynamicResource BgSurfaceBrush}"
+                                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                                         Padding="12,9" Margin="0,0,0,10" />
+                                            <PasswordBox x:Name="SettingsConfirmPasswordBox"
+                                                         Background="{DynamicResource BgSurfaceBrush}"
+                                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                                         Padding="12,9" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Padding="14"
+                                            Background="{DynamicResource BgSurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="10">
+                                        <StackPanel>
+                                            <TextBlock Text="Yedekleme ve dışa aktarma" FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,5" />
+                                            <TextBlock Text="Günlükleri metin dosyası olarak dışa aktararak yedekleyin."
+                                                       FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,0,0,12" />
+                                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                                    Click="ExportAllButton_Click"
+                                                    Content="Tüm Günlükleri Dışa Aktar"
+                                                    HorizontalAlignment="Left" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel x:Name="SettingsAboutPanel" Visibility="Collapsed">
+                                    <TextBlock Text="Uygulama bilgileri" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="Güncel sürüm ve yayın bilgilerini buradan denetleyin."
+                                               FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Margin="0,0,0,14" />
+                                    <Border Padding="14"
+                                            Background="{DynamicResource BgSurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="10">
+                                        <StackPanel>
+                                            <TextBlock Text="Güncelleme &amp; Hakkında" FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                                            <TextBlock x:Name="CurrentVersionTextBlock" FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,0,0,14" />
+                                            <Button x:Name="CheckForUpdatesButton"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Content="Güncellemeleri Denetle"
+                                                    Click="CheckForUpdatesButton_Click"
+                                                    HorizontalAlignment="Left" Margin="0,0,0,8" />
+                                            <Button x:Name="ViewReleaseNotesButton"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Content="Son Sürüm Notlarını Görüntüle"
+                                                    Click="ViewReleaseNotesButton_Click"
+                                                    HorizontalAlignment="Left" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                                    Margin="0,16,0,0">
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Click="CancelModalButton_Click"
+                                    Content="İptal" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" Click="SaveSettingsButton_Click"
+                                    ToolTip="Ayarları kaydet">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="M5,3H17L21,7V21H3V3Z M7,3V9H16V3 M7,21V13H17V21"
+                                          Fill="Transparent" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" Width="16" Height="16" Stretch="Uniform" Margin="0,0,8,0" />
+                                    <TextBlock Text="Ayarları Kaydet" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
             </Border>
             <Border x:Name="DeleteModalCard" Width="440" Padding="28"
-                    Background="{StaticResource BgSidebarBrush}" BorderBrush="{StaticResource BorderSubtleBrush}"
+                    Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="1" CornerRadius="16" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="Günlük silinsin mi?" FontSize="20" FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12" />
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12" />
                     <TextBlock x:Name="DeleteEntryConfirmationText" TextWrapping="Wrap" FontSize="13"
-                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,24" />
+                               Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,24" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Style="{StaticResource SecondaryButtonStyle}" Click="CancelModalButton_Click"
                                 Content="Vazgeç" Margin="0,0,8,0" />
@@ -753,23 +1112,23 @@
                 </StackPanel>
             </Border>
             <Border x:Name="ShortcutHelpModalCard" Width="600" MaxHeight="680" Padding="28"
-                    Background="{StaticResource BgSidebarBrush}" BorderBrush="{StaticResource BorderSubtleBrush}"
+                    Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="1" CornerRadius="16" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="Klavye Kısayolları" FontSize="21" FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,18" />
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,18" />
                     <ScrollViewer MaxHeight="500" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <StackPanel.Resources>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="FontSize" Value="12" />
-                                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
                                     <Setter Property="Margin" Value="0,3,12,3" />
                                 </Style>
                             </StackPanel.Resources>
                             <TextBlock Text="Yazım ve düzenleme" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="#A5B4FC" Margin="0,0,0,8" />
+                                       Foreground="{DynamicResource AccentHoverBrush}" Margin="0,0,0,8" />
                             <UniformGrid Columns="2" Margin="0,0,0,14">
                                 <TextBlock Text="Ctrl+Z  —  Geri Al" />
                                 <TextBlock Text="Ctrl+Y / Ctrl+Shift+Z  —  İleri Al" />
@@ -777,7 +1136,7 @@
                                 <TextBlock Text="Ctrl+L  —  Madde işareti ekle" />
                             </UniformGrid>
                             <TextBlock Text="Günlük ve gezinme" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="#A5B4FC" Margin="0,0,0,8" />
+                                       Foreground="{DynamicResource AccentHoverBrush}" Margin="0,0,0,8" />
                             <UniformGrid Columns="2" Margin="0,0,0,14">
                                 <TextBlock Text="Ctrl+N  —  Yeni günlük" />
                                 <TextBlock Text="Ctrl+S  —  Kaydet" />
@@ -791,14 +1150,14 @@
                                 <TextBlock Text="Esc  —  Açık pencereyi kapat" />
                             </UniformGrid>
                             <TextBlock Text="Görünüm ve yardım" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="#A5B4FC" Margin="0,0,0,8" />
+                                       Foreground="{DynamicResource AccentHoverBrush}" Margin="0,0,0,8" />
                             <UniformGrid Columns="2">
                                 <TextBlock Text="Ctrl++  —  Yazıyı büyüt" />
                                 <TextBlock Text="Ctrl+-  —  Yazıyı küçült" />
                                 <TextBlock Text="F1  —  Bu pencereyi aç" />
                             </UniformGrid>
                             <TextBlock Text="* Günlük listesinden seçiliyken. Ctrl+C / V / X / A: kopyala, yapıştır, kes ve tümünü seç."
-                                       FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="11" Foreground="{DynamicResource TextMutedBrush}"
                                        TextWrapping="Wrap" Margin="0,16,0,0" />
                         </StackPanel>
                     </ScrollViewer>
@@ -807,14 +1166,15 @@
                 </StackPanel>
             </Border>
         </Grid>
-        <Grid x:Name="AuthenticationOverlayGrid" Panel.ZIndex="20" Background="#F20D1017"
+        <Grid x:Name="AuthenticationOverlayGrid" Panel.ZIndex="20"
               Visibility="Collapsed" Opacity="0">
+            <Border Background="{DynamicResource BgPrimaryBrush}" Opacity="0.84" />
             <Border x:Name="AuthenticationCard" Width="440" Padding="34"
-                    Background="{StaticResource BgSidebarBrush}" BorderBrush="#665F73E8"
+                    Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderFocusBrush}"
                     BorderThickness="1" CornerRadius="18" HorizontalAlignment="Center" VerticalAlignment="Center"
                     RenderTransformOrigin="0.5,0.5" Opacity="0">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="28" ShadowDepth="0" Color="#665F73E8" Opacity="0.3" />
+                    <DropShadowEffect BlurRadius="28" ShadowDepth="0" Color="{DynamicResource AccentColor}" Opacity="0.3" />
                 </Border.Effect>
                 <Border.RenderTransform>
                     <TransformGroup>
@@ -823,68 +1183,157 @@
                     </TransformGroup>
                 </Border.RenderTransform>
                 <StackPanel>
-                    <Border Width="64" Height="64" CornerRadius="19" Background="{StaticResource AccentSoftBrush}"
-                            HorizontalAlignment="Center" Margin="0,0,0,18">
-                        <Image Source="/app.ico" Width="42" Height="42" Stretch="Uniform"
+                    <Border Width="64" Height="64" CornerRadius="20" Background="{DynamicResource AccentSoftBrush}"
+                            HorizontalAlignment="Center" Margin="0,0,0,18" ClipToBounds="True">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="0"
+                                              Color="{DynamicResource AccentColor}" Opacity="0.28" />
+                        </Border.Effect>
+                        <Image Source="/app.ico" Width="64" Height="64" Stretch="UniformToFill"
                                RenderOptions.BitmapScalingMode="HighQuality"
-                               VerticalAlignment="Center" HorizontalAlignment="Center" />
+                               VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Image.Clip>
+                                <RectangleGeometry Rect="0,0,64,64" RadiusX="20" RadiusY="20" />
+                            </Image.Clip>
+                        </Image>
                     </Border>
                     <TextBlock x:Name="AuthenticationGreetingText" Text="Günaydın" FontSize="13"
-                               FontWeight="SemiBold" Foreground="#A5B4FC" HorizontalAlignment="Center" />
+                               FontWeight="SemiBold" Foreground="{DynamicResource AccentHoverBrush}" HorizontalAlignment="Center" />
                     <TextBlock x:Name="AuthenticationDateText" FontSize="12"
-                               Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,14"
+                               Foreground="{DynamicResource TextMutedBrush}" Margin="0,4,0,14"
                                HorizontalAlignment="Center" />
                     <TextBlock x:Name="AuthenticationTitleText" Text="Günlüğünüz güvende" FontSize="22"
-                               FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
+                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
                                HorizontalAlignment="Center" />
                     <TextBlock x:Name="AuthenticationSubtitleText" Text="Devam etmek için PIN veya parolanızı girin."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,22" />
-                    <Grid Margin="0,0,0,6">
-                        <PasswordBox x:Name="AuthenticationPasswordBox" Background="{StaticResource BgSurfaceBrush}"
-                                     Foreground="{StaticResource TextPrimaryBrush}" Padding="14,11,48,11"
+                    <Border x:Name="AuthenticationPasswordBorder" CornerRadius="10"
+                            Background="{DynamicResource BgSurfaceBrush}" BorderThickness="1" Margin="0,0,0,6">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderFocusBrush}" />
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect BlurRadius="12" ShadowDepth="0"
+                                                                  Color="{DynamicResource AccentColor}" Opacity="0.24" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <PasswordBox x:Name="AuthenticationPasswordBox" Background="Transparent"
+                                         BorderThickness="0" CaretBrush="{DynamicResource AccentHoverBrush}"
+                                         Foreground="{DynamicResource TextPrimaryBrush}" Padding="14,11,48,11"
+                                         FontSize="15" MaxLength="256"
+                                         PasswordChanged="AuthenticationPasswordBox_PasswordChanged"
+                                         PreviewKeyDown="AuthenticationInput_PreviewKeyDown"
+                                         PreviewKeyUp="AuthenticationInput_PreviewKeyUp"
+                                         GotKeyboardFocus="AuthenticationInput_GotKeyboardFocus"
+                                         LostKeyboardFocus="AuthenticationInput_LostKeyboardFocus" />
+                            <TextBox x:Name="AuthenticationVisiblePasswordTextBox" Visibility="Collapsed"
+                                     Background="Transparent" BorderThickness="0" CaretBrush="{DynamicResource AccentHoverBrush}"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" Padding="14,11,48,11"
                                      FontSize="15" MaxLength="256"
-                                     PasswordChanged="AuthenticationPasswordBox_PasswordChanged"
+                                     TextChanged="AuthenticationVisiblePasswordTextBox_TextChanged"
                                      PreviewKeyDown="AuthenticationInput_PreviewKeyDown"
                                      PreviewKeyUp="AuthenticationInput_PreviewKeyUp"
-                                     GotKeyboardFocus="AuthenticationInput_GotKeyboardFocus" />
-                        <TextBox x:Name="AuthenticationVisiblePasswordTextBox"
-                                 Style="{StaticResource DarkTextBoxStyle}" Visibility="Collapsed"
-                                 Foreground="{StaticResource TextPrimaryBrush}" Padding="14,11,48,11"
-                                 FontSize="15" MaxLength="256"
-                                 TextChanged="AuthenticationVisiblePasswordTextBox_TextChanged"
-                                 PreviewKeyDown="AuthenticationInput_PreviewKeyDown"
-                                 PreviewKeyUp="AuthenticationInput_PreviewKeyUp"
-                                 GotKeyboardFocus="AuthenticationInput_GotKeyboardFocus" />
-                        <Button x:Name="AuthenticationPasswordVisibilityButton" Width="38" Height="34"
-                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"
-                                Background="Transparent" BorderThickness="0" Padding="8"
-                                Click="AuthenticationPasswordVisibilityButton_Click"
-                                Focusable="False" ToolTip="Şifreyi göster veya gizle">
-                            <Path x:Name="AuthenticationEyePath"
-                                  Data="M12,5C7,5 2.73,8.11 1,12C2.73,15.89 7,19 12,19C17,19 21.27,15.89 23,12C21.27,8.11 17,5 12,5M12,16.5A4.5,4.5 0 1,1 12,7.5A4.5,4.5 0 0,1 12,16.5M12,14A2,2 0 1,0 12,10A2,2 0 0,0 12,14"
-                                  Fill="Transparent" Stroke="{StaticResource TextSecondaryBrush}"
-                                  StrokeThickness="1.5" StrokeLineJoin="Round"
-                                  Width="18" Height="18" Stretch="Uniform" />
-                        </Button>
-                    </Grid>
+                                     GotKeyboardFocus="AuthenticationInput_GotKeyboardFocus"
+                                     LostKeyboardFocus="AuthenticationInput_LostKeyboardFocus" />
+                            <TextBlock x:Name="AuthenticationPasswordPlaceholder"
+                                       Text="Parola veya PIN..." FontSize="15"
+                                       Foreground="{DynamicResource TextMutedBrush}" Margin="14,0,48,0"
+                                       VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <Button x:Name="AuthenticationPasswordVisibilityButton" Width="38" Height="34"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"
+                                    Background="Transparent" BorderThickness="0" Padding="8"
+                                    Click="AuthenticationPasswordVisibilityButton_Click"
+                                    Focusable="False" ToolTip="Şifreyi göster veya gizle">
+                                <Path x:Name="AuthenticationEyePath"
+                                      Data="M12,5C7,5 2.73,8.11 1,12C2.73,15.89 7,19 12,19C17,19 21.27,15.89 23,12C21.27,8.11 17,5 12,5M12,16.5A4.5,4.5 0 1,1 12,7.5A4.5,4.5 0 0,1 12,16.5M12,14A2,2 0 1,0 12,10A2,2 0 0,0 12,14"
+                                      Fill="Transparent" Stroke="{DynamicResource TextSecondaryBrush}"
+                                      StrokeThickness="1.5" StrokeLineJoin="Round"
+                                      Width="18" Height="18" Stretch="Uniform" />
+                            </Button>
+                        </Grid>
+                    </Border>
                     <TextBlock x:Name="AuthenticationCapsLockText" Text="Caps Lock Açık" FontSize="11"
-                               Foreground="#FBBF24" Margin="2,0,0,6" Visibility="Collapsed" />
+                               Foreground="{DynamicResource AccentHoverBrush}" Margin="2,0,0,6" Visibility="Collapsed" />
                     <TextBlock x:Name="AuthenticationHintText" FontSize="12"
-                               Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"
                                Margin="2,0,0,12" Visibility="Collapsed" />
-                    <PasswordBox x:Name="AuthenticationConfirmationBox" Background="{StaticResource BgSurfaceBrush}"
-                                 Foreground="{StaticResource TextPrimaryBrush}" Padding="14,11"
+                    <PasswordBox x:Name="AuthenticationConfirmationBox" Background="{DynamicResource BgSurfaceBrush}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}" Padding="14,11"
                                  FontSize="15" Margin="0,0,0,12" Visibility="Collapsed" />
-                    <TextBlock x:Name="AuthenticationErrorText" Foreground="#FCA5A5" FontSize="12"
+                    <TextBlock x:Name="AuthenticationErrorText" Foreground="{DynamicResource DangerHoverBrush}" FontSize="12"
                                TextWrapping="Wrap" Margin="2,0,0,12" />
                     <Button x:Name="AuthenticationActionButton" Style="{StaticResource PrimaryButtonStyle}"
-                            Click="AuthenticationActionButton_Click" Content="Kilidi Aç" IsDefault="True" />
+                            Click="AuthenticationActionButton_Click" Content="Kilidi Aç" IsDefault="True"
+                            HorizontalAlignment="Stretch" Height="46" Background="{DynamicResource AccentBrush}"
+                            Margin="0,0,0,2">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="UnlockButtonBorder" Background="{TemplateBinding Background}"
+                                        CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="UnlockButtonBorder" Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="UnlockButtonBorder" Property="Background" Value="{DynamicResource AccentPressedBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter TargetName="UnlockButtonBorder" Property="Opacity" Value="0.5" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                     <Button x:Name="SkipPasswordSetupButton" Style="{StaticResource SecondaryButtonStyle}"
                             Click="SkipPasswordSetupButton_Click" Content="PIN kullanmadan devam et"
                             Margin="0,10,0,0" Visibility="Collapsed" />
-                    <Button Style="{StaticResource GhostIconButtonStyle}" Click="ExitAuthenticationButton_Click"
-                            Content="Uygulamadan çık" Width="Auto" Margin="0,12,0,0" />
+                    <Button Click="ExitAuthenticationButton_Click" Width="Auto" Margin="0,12,0,0"
+                            Padding="12,9" Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Cursor="Hand"
+                            HorizontalAlignment="Center">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="ExitButtonBorder"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Path Data="M10,17 L15,12 L10,7 M15,12 L3,12 M13,3 L20,3 L20,21 L13,21"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.6" StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                              Width="17" Height="17" Stretch="Uniform"
+                                              Margin="0,0,8,0" />
+                                        <ContentPresenter VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="ExitButtonBorder" Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+                                        <Setter TargetName="ExitButtonBorder" Property="BorderBrush" Value="{DynamicResource DangerHoverBrush}" />
+                                        <Setter Property="Foreground" Value="{DynamicResource DangerHoverBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="ExitButtonBorder" Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <TextBlock Text="Uygulamadan çık" FontSize="12.5" FontWeight="Medium" />
+                    </Button>
                 </StackPanel>
             </Border>
         </Grid>

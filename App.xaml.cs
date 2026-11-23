@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Windows;
 using System.Windows.Markup;
+using Application = System.Windows.Application;
+using GunlukUygulamasi.Services;
 
 namespace GunlukUygulamasi;
 
@@ -20,6 +22,23 @@ public partial class App : Application
             new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(trCulture.IetfLanguageTag)));
 
         base.OnStartup(e);
+
+        try
+        {
+            var settings = new DiaryStorageService().LoadSettings();
+            var themeName = ThemeService.IsKnownTheme(settings.ThemeName)
+                ? settings.ThemeName
+                : ThemeService.NightBlue;
+            new ThemeService(this).ApplyTheme(themeName, weather: null, DateTime.Now);
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Trace.TraceError("Başlangıç teması yüklenemedi: {0}", exception);
+        }
+
+        var mainWindow = new MainWindow();
+        MainWindow = mainWindow;
+        mainWindow.Show();
     }
 }
 

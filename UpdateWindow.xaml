@@ -9,12 +9,12 @@
         MaxHeight="720"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource BgPrimaryBrush}"
-        Foreground="{StaticResource TextPrimaryBrush}"
+        Background="{DynamicResource BgPrimaryBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
         FontFamily="{StaticResource AppFontFamily}">
     <Border Margin="18" Padding="28"
-            Background="{StaticResource BgSidebarBrush}"
-            BorderBrush="{StaticResource BorderSubtleBrush}"
+            Background="{DynamicResource BgSidebarBrush}"
+            BorderBrush="{DynamicResource BorderSubtleBrush}"
             BorderThickness="1" CornerRadius="16">
         <Grid>
             <Grid.RowDefinitions>
@@ -27,22 +27,22 @@
 
             <TextBlock x:Name="WindowHeadingText"
                        FontSize="21" FontWeight="Bold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
                        TextWrapping="Wrap" />
             <TextBlock x:Name="VersionText"
                        Grid.Row="1" Margin="0,8,0,16"
-                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
 
             <Border Grid.Row="2" Padding="16"
-                    Background="{StaticResource BgSurfaceBrush}"
-                    BorderBrush="{StaticResource BorderSubtleBrush}"
+                    Background="{DynamicResource BgSurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="1" CornerRadius="10">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Güncelleme Notları" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10" />
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10" />
                         <TextBlock x:Name="ReleaseNotesText"
-                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
                 </ScrollViewer>
@@ -50,12 +50,12 @@
 
             <StackPanel Grid.Row="3" Margin="0,14,0,0">
                 <TextBlock x:Name="InstallerStatusText"
-                           FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                           FontSize="11" Foreground="{DynamicResource TextMutedBrush}"
                            TextWrapping="Wrap" Visibility="Collapsed" />
                 <ProgressBar x:Name="DownloadProgressBar" Height="7" Margin="0,8,0,0"
                              Minimum="0" Maximum="100" Visibility="Collapsed" />
                 <TextBlock x:Name="DownloadStatusText" Margin="0,6,0,0"
-                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
                            Visibility="Collapsed" />
             </StackPanel>
 

@@ -2,9 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style x:Key="DarkDatePickerTextBoxStyle" TargetType="DatePickerTextBox">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="CaretBrush" Value="{StaticResource AccentHoverBrush}" />
-        <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentHoverBrush}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
@@ -17,9 +17,9 @@
     </Style>
 
     <Style x:Key="DarkDatePickerStyle" TargetType="DatePicker">
-        <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BgSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}" />
         <Setter Property="FontSize" Value="13.5" />
@@ -46,11 +46,11 @@
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="BtnBg" Background="Transparent" CornerRadius="6">
                                             <Path Data="M7,2V4H5A2,2 0 0,0 3,6V18A2,2 0 0,0 5,20H19A2,2 0 0,0 21,18V6A2,2 0 0,0 19,4H17V2H15V4H9V2H7M5,8H19V18H5V8Z"
-                                                  Fill="{StaticResource TextSecondaryBrush}" Stretch="Uniform" Width="15" Height="15" />
+                                                  Fill="{DynamicResource TextSecondaryBrush}" Stretch="Uniform" Width="15" Height="15" />
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="BtnBg" Property="Background" Value="{StaticResource BgElevatedBrush}" />
+                                                <Setter TargetName="BtnBg" Property="Background" Value="{DynamicResource BgElevatedBrush}" />
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -62,7 +62,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="RootBorder" Property="BorderBrush" Value="#3D4866" />
+                            <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource BorderFocusBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
