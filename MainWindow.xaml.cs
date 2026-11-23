@@ -248,6 +248,7 @@ public partial class MainWindow : Window
         AuthenticationPasswordBox.Password = string.Empty;
         AuthenticationVisiblePasswordTextBox.Clear();
         AuthenticationVisiblePasswordTextBox.Visibility = Visibility.Collapsed;
+        AuthenticationPasswordVisibilityButton.IsChecked = false;
         AuthenticationPasswordBox.Visibility = isFirstRunSetup || _security.PasswordEnabled
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -441,6 +442,7 @@ public partial class MainWindow : Window
     {
         if (AuthenticationPasswordBox.Visibility == Visibility.Visible)
         {
+            AuthenticationPasswordVisibilityButton.IsChecked = true;
             AuthenticationVisiblePasswordTextBox.Text = AuthenticationPasswordBox.Password;
             AuthenticationPasswordBox.Visibility = Visibility.Collapsed;
             AuthenticationVisiblePasswordTextBox.Visibility = Visibility.Visible;
@@ -452,6 +454,7 @@ public partial class MainWindow : Window
         }
         else
         {
+            AuthenticationPasswordVisibilityButton.IsChecked = false;
             AuthenticationPasswordBox.Password = AuthenticationVisiblePasswordTextBox.Text;
             AuthenticationVisiblePasswordTextBox.Visibility = Visibility.Collapsed;
             AuthenticationPasswordBox.Visibility = Visibility.Visible;

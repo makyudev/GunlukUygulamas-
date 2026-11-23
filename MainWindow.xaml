@@ -1249,17 +1249,39 @@
                                        Text="Parola veya PIN..." FontSize="15"
                                        Foreground="{DynamicResource TextMutedBrush}" Margin="14,0,48,0"
                                        VerticalAlignment="Center" IsHitTestVisible="False" />
-                            <Button x:Name="AuthenticationPasswordVisibilityButton" Width="38" Height="34"
-                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"
-                                    Background="Transparent" BorderThickness="0" Padding="8"
-                                    Click="AuthenticationPasswordVisibilityButton_Click"
-                                    Focusable="False" ToolTip="Şifreyi göster veya gizle">
+                            <ToggleButton x:Name="AuthenticationPasswordVisibilityButton" Width="32" Height="32"
+                                          HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"
+                                          Background="Transparent" Foreground="#9CA3AF"
+                                          BorderThickness="0" Padding="0" FocusVisualStyle="{x:Null}"
+                                          Cursor="Hand" Click="AuthenticationPasswordVisibilityButton_Click"
+                                          Focusable="False" ToolTip="Şifreyi göster veya gizle">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="EyeButtonBorder"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="EyeButtonBorder" Property="Background"
+                                                        Value="#1AFFFFFF" />
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
                                 <Path x:Name="AuthenticationEyePath"
                                       Data="M12,5C7,5 2.73,8.11 1,12C2.73,15.89 7,19 12,19C17,19 21.27,15.89 23,12C21.27,8.11 17,5 12,5M12,16.5A4.5,4.5 0 1,1 12,7.5A4.5,4.5 0 0,1 12,16.5M12,14A2,2 0 1,0 12,10A2,2 0 0,0 12,14"
-                                      Fill="Transparent" Stroke="{DynamicResource TextSecondaryBrush}"
+                                      Fill="Transparent"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
                                       StrokeThickness="1.5" StrokeLineJoin="Round"
                                       Width="18" Height="18" Stretch="Uniform" />
-                            </Button>
+                            </ToggleButton>
                         </Grid>
                     </Border>
                     <TextBlock x:Name="AuthenticationCapsLockText" Text="Caps Lock Açık" FontSize="11"
